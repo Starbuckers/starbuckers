@@ -1,0 +1,76 @@
+// trades
+
+    struct Trades_pending {
+        address from;
+        address to;
+        string buysell;
+        string securitycode;
+        string currency;
+        uint16 units;
+        uint16 unitprice;
+        string state; 
+    }
+    
+    struct Trades_matched {
+        address buyer;
+        address seller;
+        string securitycode;
+        string currency;
+        uint16 units;
+        uint16 unitprice;
+        string state;
+    }
+    
+    function registerTrade(address from, address _to, string buysell, string securitycode, string currency, uint16 units, uint16 unitprice) {
+        
+        // first check if we can find a match by cycling through all Trades_pending
+        
+        
+
+        // if yes: 
+        // delete the matched trade from Trades_pending
+        // insert the trade into Trades_matched
+        // and then call the trade processing function
+        
+        
+        // if not, create hash and append it to Trades_pending
+
+    }
+    
+    function processTrade() {
+    
+        // check trade price
+        market_price = get price from data feed
+        trade_price
+        if (trade_price > 0 and abs((market_price - trade price)/trade_price > 0.05 ) then
+          cancelTrade();  
+        end
+        
+        // does the buyer have enough cash?
+        if (buyer does not have enough cash) {
+          cancelTrade();
+        }
+        
+        // does the seller have enough securities
+        if (seller has enough securities) {
+          bookTrade();
+          return;
+        }
+        
+        // check lending agreements
+        securities_in_account
+        
+        cycle through all lending agreements and get sum of available_securities to be lent
+        
+        if (securities_in_account + available_securities) >= volume {
+            // ok, we have enough
+            // generate the securities loans and put securities into the sellers account
+            
+            // book the trade
+            bookTrade();
+
+        } else {
+            cancelTrade();        
+        }
+
+    }
