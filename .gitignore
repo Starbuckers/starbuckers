@@ -1,2 +1,7 @@
+node_modules/
+dist/
+npm-debug.log
+.DS_Store
+/protocol/lib
+/protocol/src/environments/development/contracts/*
 build
-node_modules
