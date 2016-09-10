@@ -36,8 +36,6 @@ function sendCoin() {
 };
 
 window.onload = function() {
-  var provider = new web3.providers.HttpProvider("http://localhost:8545");
-  web3.setProvider(provider);
   web3.eth.getAccounts(function(err, accs) {
     if (err != null) {
       alert("There was an error fetching your accounts.");
