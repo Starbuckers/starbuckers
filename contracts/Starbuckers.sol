@@ -1,5 +1,6 @@
 pragma solidity ^0.4.1;
 import "github.com/Arachnid/solidity-stringutils/strings.sol";
+import "BlockOneOracleClient.sol";
 
 contract withEnlistedSecurities {
     using strings for *;
@@ -13,7 +14,7 @@ contract withEnlistedSecurities {
     }
 }
 
-contract Starbuckers is withEnlistedSecurities{
+contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
     
     struct Account {
         uint cash;
@@ -54,6 +55,8 @@ contract Starbuckers is withEnlistedSecurities{
     Order[] buyOrders;
     Order[] sellOrders;
     Trade[] trades;
+    
+    uint256 marketprice;
     
     mapping (address => Account) accounts;
     
@@ -115,6 +118,42 @@ contract Starbuckers is withEnlistedSecurities{
         delete sellOrders[indexSell];
     }
     
+    function processTrade() {
+    
+        // check trade price
+        
+        //trade_price
+        //if (trade_price > 0 and abs((market_price - trade price)/trade_price > 0.05 ) then
+        //  cancelTrade();  
+        //end
+        
+        // does the buyer have enough cash?
+        //if (buyer does not have enough cash) {
+        //  cancelTrade();
+        //}
+        
+        // does the seller have enough securities
+        //if (seller has enough securities) {
+        //  bookTrade();
+        //  return;
+        //}
+        
+        // check lending agreements
+        //securities_in_account
+        
+        //cycle through all lending agreements and get sum of available_securities to be lent
+        
+        //if (securities_in_account + available_securities) >= volume {
+            // ok, we have enough
+            // generate the securities loans and put securities into the sellers account
+            
+            // book the trade
+            //bookTrade();
+
+        //} else {
+         //   cancelTrade();        
+    }
+    
     function proposeLendingAgreement(address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) validSecurityCode(_securitycode) {
        if (msg.sender == _to) throw; // don't propose to your self, selfish proposer.
        var a = Agreement(msg.sender, _to, _securitycode, _haircut, _lendigrate, State.PENDING);
@@ -138,6 +177,13 @@ contract Starbuckers is withEnlistedSecurities{
     }
     
     event LogAgreementStateChange(address indexed _from, address indexed _to, uint indexed _lendingId, State  state);
+    event BlockOneOracleClientTest_onOracleRequest(bytes32 _ric, uint _timestamp, uint _requestId);
+  event BlockOneOracleClientTest_onOracleResponse(uint _requestId, uint last_trade);
+  event BlockOneOracleClientTest_onOracleFailure(uint _requestId, uint _reason);
+
+  function makeOracleRequest(bytes32 _ric, uint _timestamp) {
+      BlockOneOracleClientTest_onOracleRequest(_ric,_timestamp,oracleRequestOneByMarketTime(_ric,_timestamp));
+  }
 } 
 
 contract StarbuckersDemo is Starbuckers{
