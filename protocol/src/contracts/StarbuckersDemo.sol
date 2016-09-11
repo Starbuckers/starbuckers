@@ -122,10 +122,10 @@ contract Starbuckers { //is BlockOneOracleClient(){
     }
     
     function proposeLendingAgreement(address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) {
-        proposeLendingAgreement(msg.sender, _to, _securitycode, _haircut, _lendigrate);
+        proposeLendingAgreementFrom(msg.sender, _to, _securitycode, _haircut, _lendigrate);
     }
         
-    function proposeLendingAgreement(address _from, address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) {
+    function proposeLendingAgreementFrom(address _from, address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) {
     
        var a = Agreement(_from, _to, _securitycode, _haircut, _lendigrate, State.PENDING);
        uint256 lendingId = agreements.length; //shortcut because lenght-1 is pos
@@ -433,8 +433,8 @@ contract StarbuckersDemo is Starbuckers{
         accounts[0x2] = Account(50000000, 100, 0);
         accounts[newGuy] = Account(1000, 100, 0);
         accounts[newGuy2] = Account(5000, 500, 0);
-        proposeLendingAgreement(newGuy, 0x1, "BARC.L", 1000, 300);
-        proposeLendingAgreement(newGuy2, 0x1, "BARC.L", 1500, 400);
+        proposeLendingAgreementFrom(newGuy, 0x1, "BARC.L", 1000, 300);
+        proposeLendingAgreementFrom(newGuy2, 0x1, "BARC.L", 1500, 400);
         processOrder(0x2, 0x1, BuySell.BUY, "BARC.L", 10, 17450);
         processOrder(0x1, 0x2, BuySell.SELL, "BARC.L", 10, 17450);
         
