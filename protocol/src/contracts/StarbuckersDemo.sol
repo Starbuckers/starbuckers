@@ -1,4 +1,4 @@
-pragma solidity ^0.4.1;
+//pragma solidity ^0.4.1;
 import "github.com/Arachnid/solidity-stringutils/strings.sol";
 //import "BlockOneOracleClient.sol";
 
@@ -32,13 +32,43 @@ contract Starbuckers { //is BlockOneOracleClient(){
         uint32 unitprice;
     }
     
-    struct Trade {
+    function getBuyOrder(uint index) constant returns ( address from, address to, BuySell buysell, string securitycode, uint16 units, uint32 unitprice){   
+        var o=buyOrders[index];
+        to = o.to;
+        from = o.from;
+        buysell = o.buysell;
+        securitycode = o.securitycode;
+        units = o.units;
+        unitprice = o.unitprice;
+        }
+        
+    function getSellOrder(uint index) constant returns ( address from, address to, BuySell buysell, string securitycode, uint16 units, uint32 unitprice){   
+        var o=sellOrders[index];
+        to = o.to;
+        from = o.from;
+        buysell = o.buysell;
+        securitycode = o.securitycode;
+        units = o.units;
+        unitprice = o.unitprice;
+    }
+        
+    struct Trade { 
         address buyer;
         address seller;
         string securitycode;
         uint16 units;
         uint32 unitprice;
         TradeState state;
+    }
+    
+    function getTrade(uint index) constant returns (address buyer, address seller, string securitycode, uint16 units, uint32 unitprice, TradeState state){
+        
+        buyer = trades[index].buyer;
+        seller = trades[index].seller;
+        securitycode = trades[index].securitycode;
+        units = trades[index].units;
+        unitprice = trades[index].unitprice;
+        state = trades[index].state;
     }
     
     Order[] buyOrders;
@@ -106,7 +136,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
         return true;
     }
     
-    function makeTrade(uint256 indexBuy, uint256 indexSell){
+    function createTrade(uint256 indexBuy, uint256 indexSell){
         if (!matchesOrders(indexBuy, indexSell)) throw;
         Order buy = buyOrders[indexBuy];
         trades.push(Trade(buy.from, buy.to, buy.securitycode, buy.units, buy.unitprice, TradeState.PENDING));
@@ -188,7 +218,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
     }
     
     function Starbuckers(){
-        //makeOracleRequest("BARC.L", block.timestamp + 60 seconds);
+        //makeOracleRequest("BARC.L", now + 60 seconds);
     }
     
     event LogAgreementStateChange(address indexed _from, address indexed _to, uint indexed _lendingId, State  state);
@@ -203,15 +233,24 @@ contract Starbuckers { //is BlockOneOracleClient(){
     
     function onOracleResponse(uint _requestId, uint ts_millis, bytes32 _ric, uint last_trade, uint bid, uint ask, uint bid_size, uint ask_size){
         market_price = last_trade;
-        makeOracleRequest("BARC.L", block.timestamp + 60 seconds);
+        makeOracleRequest("BARC.L", now + 60 seconds);
     }
 } 
 
 contract StarbuckersDemo is Starbuckers{
+    address newGuy;
+    address newGuy2;
     
     function StarbuckersDemo(){
+        log0("init");
         address newGuy = 0xca35b7d915458ef540ade6068dfe2f44e8fa733c;
         address newGuy2 = 0x14723a09acff6d2a60dcdf7aa4aff308fddc160c;
+        
+    }
+    
+    function demo(){init(newGuy, newGuy2);}
+    
+    function init(address newGuy, address newGuy2){
         //mapping (string => uint256) secs;
         //secs["BARC.L"] = 1000;
         accounts[newGuy] = Account(1000, 100);
@@ -219,6 +258,10 @@ contract StarbuckersDemo is Starbuckers{
         proposeLendingAgreement(newGuy2, "BARC.L", 100, 200);
         processOrder(newGuy, newGuy2, BuySell.BUY, "BARC.L", 10, 20);
         processOrder(newGuy2, newGuy, BuySell.SELL, "BARC.L", 10, 20);
+        createTrade(0,0);
+        log0("trade created");
+        processTrade(0);
+        log0("trade processed");
         //accounts[newGuy].securitypositions["BARC.L"] = 1000;
     }
 }
