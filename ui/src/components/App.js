@@ -20,6 +20,7 @@ export default class App extends Component {
       cash: PropTypes.number,
       securities: PropTypes.object,
       agreements: PropTypes.array,
+      orders: PropTypes.array,
 
       proposeLendingAgreement: PropTypes.func,
     };
@@ -30,6 +31,7 @@ export default class App extends Component {
       <div>
         {this.renderBalancesCard()}
         {this.renderLendingAgreementsCard()}
+        {this.renderOrdersCard()}
       </div>
     );
   }
@@ -64,7 +66,7 @@ export default class App extends Component {
             <TableBody displayRowCheckbox={false}>
               <TableRow>
                 <TableRowColumn>Cash</TableRowColumn>
-                <TableRowColumn>${this.props.cash}</TableRowColumn>
+                <TableRowColumn>£{this.props.cash}</TableRowColumn>
               </TableRow>
               {securities}
             </TableBody>
@@ -138,6 +140,58 @@ export default class App extends Component {
             proposeLendingAgreement={this.props.proposeLendingAgreement}
           />
         </CardActions>
+      </Card>
+    );
+  }
+
+  renderOrdersCard() {
+    const stateNames = ['PENDING', 'MATCHED', 'CANCELLED'];
+    const buySell = ['BUY', 'SELL'];
+
+    const orders = this.props.orders
+      ? this.props.orders.map(
+          (a, i) => (
+              <TableRow key={i}>
+                <TableRowColumn>{a.from}</TableRowColumn>
+                <TableRowColumn>{a.to}</TableRowColumn>
+                <TableRowColumn>{buySell[a.buysell.toNumber()]}</TableRowColumn>
+                <TableRowColumn>{a.security}</TableRowColumn>
+                <TableRowColumn>{a.units.toNumber()}</TableRowColumn>
+                <TableRowColumn>£{a.price.toNumber() / 100.0}</TableRowColumn>
+                <TableRowColumn>
+                  {stateNames[a.state.toNumber()]}
+                </TableRowColumn>
+              </TableRow>
+          )
+        )
+        : null;
+
+    return (
+      <Card>
+        <CardTitle title="Orders">
+          {this.renderProgress()}
+        </CardTitle>
+        <CardText>
+          <Table
+            selectable={false}
+            fixedHeader={false}
+            style={{'table-layout': 'auto'}}>
+            <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+              <TableRow>
+                <TableHeaderColumn>From</TableHeaderColumn>
+                <TableHeaderColumn>To</TableHeaderColumn>
+                <TableHeaderColumn>Type</TableHeaderColumn>
+                <TableHeaderColumn>Security</TableHeaderColumn>
+                <TableHeaderColumn>Units</TableHeaderColumn>
+                <TableHeaderColumn>Price</TableHeaderColumn>
+                <TableHeaderColumn>State</TableHeaderColumn>
+              </TableRow>
+            </TableHeader>
+            <TableBody displayRowCheckbox={false}>
+              {orders}
+            </TableBody>
+          </Table>
+        </CardText>
       </Card>
     );
   }

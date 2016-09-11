@@ -80,6 +80,7 @@ export default class AppContainer extends Component {
     return Promise.all([
       this.fetchBalance(account),
       this.fetchLendingAgreements(account),
+      this.fetchOrders(account),
     ]);
   }
 
@@ -120,6 +121,40 @@ export default class AppContainer extends Component {
                 security: sec,
                 haircut: haircut,
                 rate: rate,
+                state: state,
+              };
+            },
+          ),
+        });
+      },
+    );
+  }
+
+  fetchOrders(account) {
+    const contract = this.getContract();
+
+    return contract.getOrderArraySize.call().then(
+      size => Promise.all(
+        _.range(size).map(
+          index => contract.getOrder.call(index),
+        ),
+      ),
+    ).then(
+      arr => {
+        this.setState({
+          orders: arr.map(
+            row => {
+              const [
+                from, to, buysell, sec, units, price, state
+              ] = row;
+
+              return {
+                from: from,
+                to: to,
+                buysell: buysell,
+                security: sec,
+                units: units,
+                price: price,
                 state: state,
               };
             },
