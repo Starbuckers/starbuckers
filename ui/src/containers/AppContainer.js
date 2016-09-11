@@ -18,6 +18,16 @@ export default class AppContainer extends Component {
     const contract = this.getContract();
 
     const accountRequest = new Promise((resolve, reject) => {
+      // allow URI override for debugging
+      const query = window.location.search.substr(1);
+      const query_parts = query.split('&');
+      for (var i in query_parts) {
+        const [key, value] = query_parts[i].split('=');
+        if (key === 'account') {
+          resolve(value);
+        }
+      }
+      
       web3.eth.getAccounts((err, accs) => {
         if (err != null) {
           alert("There was an error fetching your accounts.");
