@@ -79,11 +79,13 @@ export default class App extends Component {
 
     const makeActions = (agreement, index) => {
       if (stateNames[agreement.state.toNumber()] === 'PENDING') {
-        return (
-          <AcceptButton
-            onConfirm={x => this.props.acceptLendingAgreement(index)}
-          />
-        );
+        if (agreement.to === this.props.account) {
+          return (
+            <AcceptButton
+              onConfirm={x => this.props.acceptLendingAgreement(index)}
+            />
+          );
+        }
       }
 
       return <div />;
