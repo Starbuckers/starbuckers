@@ -1,24 +1,13 @@
-// pragma solidity ^0.4.1;
-import "strings.sol";
-import "BlockOneOracleClient.sol";
+pragma solidity ^0.4.1;
+import "github.com/Arachnid/solidity-stringutils/strings.sol";
+//import "BlockOneOracleClient.sol";
 
-contract withEnlistedSecurities {
+contract Starbuckers { //is BlockOneOracleClient(){
     using strings for *;
-    modifier validSecurityCode(string securityCode) {
-        var v1 = "BARC.L".toSlice();
-        var v2 = securityCode.toSlice();
-        
-        if (v1.equals(v2)) {
-            _
-        }
-    }
-}
 
-contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
-    
     struct Account {
         uint cash;
-        mapping (string => uint256) securitypositions;
+        uint securitypositions;
     }
     
     enum State { PENDING, ACTIVE, REJECTED, CANCELLED }
@@ -53,16 +42,23 @@ contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
     }
     
     Order[] buyOrders;
+    
+    function getOrderArraySize(BuySell bs) constant returns (uint){
+        if (BuySell.BUY == bs){
+            return buyOrders.length;
+        }
+        return sellOrders.length;
+    }
     Order[] sellOrders;
     Trade[] trades;
     
-    uint256 marketprice;
+    uint256 market_price;
     
     mapping (address => Account) accounts;
     
-    function getAccountBalance(address _who, string _security) constant returns (uint cash, uint securitybalance) {
+    function getAccountBalance(address _who) constant returns (uint cash, uint securitybalance) {
         cash = accounts[_who].cash;
-        securitybalance = accounts[_who].securitypositions[_security];
+        securitybalance = accounts[_who].securitypositions;
     }
     
     Agreement[] public agreements;
@@ -79,7 +75,7 @@ contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
         size = agreements.length;
     }
     
-    function processOrder(address _from, address _to, uint _buysell, string _securitycode, string _currency, uint16 _units, uint32 _unitprice) {
+    function processOrder(address _from, address _to, BuySell _buysell, string _securitycode, uint16 _units, uint32 _unitprice) {
         BuySell bs = BuySell(_buysell);
     
         if (BuySell.BUY == bs){
@@ -118,25 +114,29 @@ contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
         delete sellOrders[indexSell];
     }
     
-    function processTrade() {
+    function processTrade(uint256 tradeIndex) {
     
         // check trade price
         
-        //trade_price
-        //if (trade_price > 0 and abs((market_price - trade price)/trade_price > 0.05 ) then
-        //  cancelTrade();  
-        //end
+        var trade = trades[tradeIndex];
+        var trade_price= trade.unitprice;
+        var diff = int(market_price - trade_price);
+        var deviation = abs(diff) % (trade_price* 100); 
+        if (deviation > 5)
+          cancelTrade(tradeIndex);  
         
         // does the buyer have enough cash?
-        //if (buyer does not have enough cash) {
-        //  cancelTrade();
-        //}
+        var payment = (trade_price * trade.units);
+        if (accounts[trade.buyer].cash < payment) {
+            cancelTrade(tradeIndex);  
+        }
         
         // does the seller have enough securities
-        //if (seller has enough securities) {
-        //  bookTrade();
-        //  return;
-        //}
+        var seller = accounts[trade.seller];
+        if (seller.securitypositions >= trade.units) {
+          bookTrade(tradeIndex);
+          return;
+        }
         
         // check lending agreements
         //securities_in_account
@@ -154,8 +154,22 @@ contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
          //   cancelTrade();        
     }
     
-    function proposeLendingAgreement(address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) validSecurityCode(_securitycode) {
-       if (msg.sender == _to) throw; // don't propose to your self, selfish proposer.
+    function cancelTrade(uint256 tradeIndex) internal {
+       trades[tradeIndex].state = TradeState.CANCELLED;
+    }
+    function bookTrade(uint256 tradeIndex) internal {
+       trades[tradeIndex].state = TradeState.EXECUTED;
+    }
+    
+    function abs(int signedInt) constant internal returns (uint) {
+        if(signedInt < 0) {
+            return uint(-signedInt);
+        }
+        return  uint(signedInt);
+    }
+    
+    function proposeLendingAgreement(address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) {
+    
        var a = Agreement(msg.sender, _to, _securitycode, _haircut, _lendigrate, State.PENDING);
        uint256 lendingId = agreements.length; //shortcut because lenght-1 is pos
        agreements.push(a);
@@ -166,7 +180,7 @@ contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
     function  acceptLendingAgreement(uint _lendingId){
         bool found=false;
         var a = agreements[_lendingId];
-        if (msg.sender != a.from) throw;
+        if (msg.sender != a.to) throw;
         if (State.PENDING != a.state) throw;
         
         a.state= State.ACTIVE;
@@ -174,38 +188,37 @@ contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
     }
     
     function Starbuckers(){
+        //makeOracleRequest("BARC.L", block.timestamp + 60 seconds);
     }
     
     event LogAgreementStateChange(address indexed _from, address indexed _to, uint indexed _lendingId, State  state);
     event BlockOneOracleClientTest_onOracleRequest(bytes32 _ric, uint _timestamp, uint _requestId);
-  event BlockOneOracleClientTest_onOracleResponse(uint _requestId, uint last_trade);
-  event BlockOneOracleClientTest_onOracleFailure(uint _requestId, uint _reason);
+    event BlockOneOracleClientTest_onOracleResponse(uint _requestId, uint last_trade);
+    event BlockOneOracleClientTest_onOracleFailure(uint _requestId, uint _reason);
 
-  function makeOracleRequest(bytes32 _ric, uint _timestamp) {
-      BlockOneOracleClientTest_onOracleRequest(_ric,_timestamp,oracleRequestOneByMarketTime(_ric,_timestamp));
-  }
-
-  // Please implement this method to receive a success response from the Oracle, ensuring to match up requestId
-  function onOracleResponse(uint _requestId, uint ts_millis, bytes32 _ric, uint last_trade, uint bid, uint ask, uint bid_size, uint ask_size) {
-    // TODO
-  }
-
-  // Please implement this method to receive a failure response from the Oracle, ensuring to match up requestId
-  function onOracleFailure(uint _requestId, uint _reason) {
-    // TODO
-  }
+    function makeOracleRequest(bytes32 _ric, uint _timestamp) {
+      //BlockOneOracleClientTest_onOracleRequest(_ric,_timestamp,oracleRequestOneByMarketTime(_ric,_timestamp));
+      
+    }
+    
+    function onOracleResponse(uint _requestId, uint ts_millis, bytes32 _ric, uint last_trade, uint bid, uint ask, uint bid_size, uint ask_size){
+        market_price = last_trade;
+        makeOracleRequest("BARC.L", block.timestamp + 60 seconds);
+    }
 } 
 
 contract StarbuckersDemo is Starbuckers{
     
-    function init(address newGuy){
-        mapping (string => uint256) secs;
-        secs["BARC.L"] = 1000;
-        accounts[newGuy] = Account(3000);
-        accounts[newGuy].securitypositions["BARC.L"] = 500;
-    }
-
-    function StarbuckersDemo() {
-        init(msg.sender);
+    function StarbuckersDemo(){
+        address newGuy = 0xca35b7d915458ef540ade6068dfe2f44e8fa733c;
+        address newGuy2 = 0x14723a09acff6d2a60dcdf7aa4aff308fddc160c;
+        //mapping (string => uint256) secs;
+        //secs["BARC.L"] = 1000;
+        accounts[newGuy] = Account(1000, 100);
+        accounts[newGuy2] = Account(5000, 500);
+        proposeLendingAgreement(newGuy2, "BARC.L", 100, 200);
+        processOrder(newGuy, newGuy2, BuySell.BUY, "BARC.L", 10, 20);
+        processOrder(newGuy2, newGuy, BuySell.SELL, "BARC.L", 10, 20);
+        //accounts[newGuy].securitypositions["BARC.L"] = 1000;
     }
 }
