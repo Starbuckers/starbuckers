@@ -10,6 +10,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
     enum State { PENDING, ACTIVE, REJECTED, CANCELLED }
     enum BuySell {BUY, SELL}
     enum TradeState {PENDING, EXECUTED, CANCELLED}
+    enum OrderState {PENDING, MATCHED, CANCELLED}
     enum LoanState {ACTIVE, INACTIVE}
     
     // struct
@@ -36,6 +37,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
         string securitycode;
         uint16 units;
         uint32 unitprice;
+        OrderState state;
     }
 
     struct Trade { 
@@ -67,8 +69,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
     
     mapping (address => Account) accounts;
     Agreement[] public agreements;
-    Order[] sellOrders;
-    Order[] buyOrders;
+    Order[] orders;
     Trade[] trades;
     Loan[] loans;
     
@@ -132,63 +133,55 @@ contract Starbuckers { //is BlockOneOracleClient(){
     // orders //////////////////////////////////////////////////////////////////
     //
 
-    function getOrderArraySize(BuySell bs) constant returns (uint){
-        if (BuySell.BUY == bs){
-            return buyOrders.length;
-        }
-        return sellOrders.length;
+    function getOrderArraySize() constant returns (uint){
+        return orders.length;
     }
     
-    function getBuyOrder(uint index) constant returns ( address from, address to, BuySell buysell, string securitycode, uint16 units, uint32 unitprice){   
-        var o=buyOrders[index];
+    function getOrder(uint index) constant returns ( address from, address to, BuySell buysell, string securitycode, uint16 units, uint32 unitprice, OrderState state){   
+        var o=orders[index];
         to = o.to;
         from = o.from;
         buysell = o.buysell;
         securitycode = o.securitycode;
         units = o.units;
         unitprice = o.unitprice;
-        }
+        state = o.state;         
         
-    function getSellOrder(uint index) constant returns ( address from, address to, BuySell buysell, string securitycode, uint16 units, uint32 unitprice){   
-        var o=sellOrders[index];
-        to = o.to;
-        from = o.from;
-        buysell = o.buysell;
-        securitycode = o.securitycode;
-        units = o.units;
-        unitprice = o.unitprice;
     }
+        
+
     
     function processOrder(address _from, address _to, BuySell _buysell, string _securitycode, uint16 _units, uint32 _unitprice) {
         BuySell bs = BuySell(_buysell);
-    
-        if (BuySell.BUY == bs){
-            buyOrders.push( Order (_from, _to, bs, _securitycode, _units, _unitprice));
-        }else{
-            sellOrders.push( Order (_from, _to, bs, _securitycode, _units, _unitprice));
+        var oNew = Order (_from, _to, bs, _securitycode, _units, _unitprice, OrderState.PENDING);
+        int256 iMatched = -1;
+        for (uint256 i =0; i < orders.length; i++){
+            var o = orders[i];
+            if (o.state != OrderState.PENDING) continue;
+            
+            if (oNew.from != o.to) continue;
+            if (oNew.to != o.from) continue;
+            var bcode = oNew.securitycode.toSlice();
+            var scode = o.securitycode.toSlice();
+            if (!bcode.equals(scode)) continue;
+            if (oNew.units != o.units) continue;
+            if (oNew.unitprice != o.unitprice) continue;
+            // we match
+            iMatched = int(i);
+            break;
         }
-    }    
-
-        // if yes: 
-        // delete the matched trade from Trades_pending
-        // insert the trade into Trades_matched
-        // and then call the trade processing function
+        if (iMatched > 0){
+            var j = uint(iMatched);
+            orders[j].state = OrderState.MATCHED;
+            o.state = OrderState.MATCHED;
+            createTrade(j);
+        }
+        orders.push(o);
         
-        
-        // if not, create hash and append it to Trades_pending
+    }  
+    
 
-    function matchesOrders(uint256 indexBuy, uint256 indexSell) constant returns (bool matches){
-        Order buy = buyOrders[indexBuy];
-        Order sell = sellOrders[indexSell];
-        if (buy.from != sell.to) return false;
-        if (buy.to != sell.from) return false;
-        var bcode = buy.securitycode.toSlice();
-        var scode = sell.securitycode.toSlice();
-        if (!bcode.equals(scode)) return false;
-        if (buy.units != sell.units) return false;
-        if (buy.unitprice != sell.unitprice) return false;
-        return true;
-    }
+   
     
     //
     // trades //////////////////////////////////////////////////////////////////
@@ -204,12 +197,25 @@ contract Starbuckers { //is BlockOneOracleClient(){
         state = trades[index].state;
     }
     
-    function createTrade(uint256 indexBuy, uint256 indexSell){
-        if (!matchesOrders(indexBuy, indexSell)) throw;
-        Order buy = buyOrders[indexBuy];
-        trades.push(Trade(buy.from, buy.to, buy.securitycode, buy.units, buy.unitprice, TradeState.PENDING));
-        delete buyOrders[indexBuy];
-        delete sellOrders[indexSell];
+    function createTrade(uint256 i){
+        
+        Order o = orders[i];
+        
+        address buyer;
+        address seller;
+        if (o.buysell == BuySell.SELL){
+            buyer = o.to;
+            seller = o.from;
+        } else {
+            seller = o.to;
+            buyer = o.from;
+        }
+        
+        var t = Trade(buyer, seller, o.securitycode, o.units, o.unitprice, TradeState.PENDING);
+        var index = trades.length;
+        trades.push(t);
+        
+        processTrade(index);
     }
     
     function processTrade(uint256 tradeIndex) {
@@ -361,8 +367,6 @@ contract StarbuckersDemo is Starbuckers{
 
         address owner = msg.sender;
         accounts[owner] = Account(3000, 500, 0);
-
-        init(newGuy, newGuy2);
     }
     
     function demo(){init(newGuy, newGuy2);}
@@ -375,10 +379,9 @@ contract StarbuckersDemo is Starbuckers{
         proposeLendingAgreement(newGuy2, "BARC.L", 100, 200);
         processOrder(newGuy, newGuy2, BuySell.BUY, "BARC.L", 10, 20);
         processOrder(newGuy2, newGuy, BuySell.SELL, "BARC.L", 10, 20);
-        
-        createTrade(0,0);
+    
         log0("trade created");
-        processTrade(0);
+        //processTrade(0);
         log0("trade processed");
         //accounts[newGuy].securitypositions["BARC.L"] = 1000;
     }
