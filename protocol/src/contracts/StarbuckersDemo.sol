@@ -360,6 +360,8 @@ contract StarbuckersDemo is Starbuckers{
 
         address owner = msg.sender;
         accounts[owner] = Account(3000, 500, 0);
+
+        init(newGuy, newGuy2);
     }
     
     function demo(){init(newGuy, newGuy2);}
