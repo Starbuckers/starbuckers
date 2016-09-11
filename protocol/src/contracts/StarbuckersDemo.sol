@@ -84,7 +84,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
     
     // main variables
         
-    uint256 market_price;
+    uint256 market_price= 1740;
     
     mapping (address => Account) accounts;
     Agreement[] public agreements;
@@ -302,6 +302,29 @@ contract Starbuckers { //is BlockOneOracleClient(){
     //
     function getLoansArraySize() constant returns (uint){
         return trades.length;
+    }
+    
+    function getLoan(uint i) constant returns(   address lender,
+        address borrower,
+        string securitycode,
+        uint16 units,
+        uint32 ts_start,
+        uint32 ts_end,
+        uint32 margin,
+        uint32 interest_paid,
+        LoanState state){
+            
+        var l= loans[i];
+        lender = l.lender;
+        borrower = l.borrower;
+        securitycode = l.securitycode;
+        units= l.units;
+        ts_start = l.ts_start;
+        ts_end =l.ts_end;
+        margin =l.margin;
+        interest_paid= l.interest_paid;
+        state = l.state;
+        
     }
 
     function checkAvailableSecurities(address seller) constant returns (uint256 available){
