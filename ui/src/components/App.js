@@ -113,7 +113,10 @@ export default class App extends Component {
           {this.renderProgress()}
         </CardTitle>
         <CardText>
-          <Table selectable={false}>
+          <Table
+            selectable={false}
+            fixedHeader={false}
+            style={{'table-layout': 'auto'}}>
             <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
               <TableRow>
                 <TableHeaderColumn>From</TableHeaderColumn>
