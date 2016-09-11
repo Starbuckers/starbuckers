@@ -8,15 +8,16 @@ contract Starbuckers { //is BlockOneOracleClient(){
     // enum
     
     enum State { PENDING, ACTIVE, REJECTED, CANCELLED }
-    enum LoanState {}
     enum BuySell {BUY, SELL}
     enum TradeState {PENDING, EXECUTED, CANCELLED}
+    enum LoanState {ACTIVE, INACTIVE}
     
     // struct
     
     struct Account {
         uint cash;
         uint securitypositions;
+        uint margin;
     }
     
     struct Agreement{
@@ -69,6 +70,8 @@ contract Starbuckers { //is BlockOneOracleClient(){
     Order[] sellOrders;
     Order[] buyOrders;
     Trade[] trades;
+    Loan[] loans;
+    
     
     //
     // accounts ////////////////////////////////////////////////////////////////
@@ -83,14 +86,13 @@ contract Starbuckers { //is BlockOneOracleClient(){
     // agreements //////////////////////////////////////////////////////////////
     //
 
-    function getAgreement(uint _lendingId) constant returns (address from, address to, string securitycode, uint16 haircut, uint16 lendigrate, State state) {
+    function getAgreement(uint _lendingId) constant returns (address from, address to, string securitycode, uint16 haircut, uint16 lendigrate) {
         var a = agreements[_lendingId];
         from = a.from;
         to = a.to;
         securitycode = a.securitycode;
         haircut = a.haircut;
         lendigrate = a.lendingrate;
-        state = a.state;
     }
     
     function getAgreementArraySize() constant returns(uint256 size){
@@ -116,6 +118,15 @@ contract Starbuckers { //is BlockOneOracleClient(){
         LogAgreementStateChange(a.from, a.to, _lendingId, State.ACTIVE);
     }
     
+    function  rejectLendingAgreement(uint _lendingId){
+        bool found=false;
+        var a = agreements[_lendingId];
+        if (msg.sender != a.to) throw;
+        if (State.PENDING != a.state) throw;
+        
+        a.state= State.REJECTED;
+        LogAgreementStateChange(a.from, a.to, _lendingId, State.REJECTED);
+    }
     //
     // orders //////////////////////////////////////////////////////////////////
     //
@@ -225,37 +236,84 @@ contract Starbuckers { //is BlockOneOracleClient(){
         }
         
         // check lending agreements
-        //securities_in_account
+        var available = checkAvailableSecurities(trade.seller);
         
-        //cycle through all lending agreements and get sum of available_securities to be lent
         
-        //if (securities_in_account + available_securities) >= volume {
-            // ok, we have enough
-            // generate the securities loans and put securities into the sellers account
-            
+        if ((seller.securitypositions + available) >= trade.units) {
+            var loan_amount = trade.units - seller.securitypositions;
+            processLoans(trade.seller, loan_amount);
             // book the trade
-            //bookTrade();
+            bookTrade(tradeIndex);
+            return; 
 
-        //} else {
-         //   cancelTrade();        
+        } 
+        cancelTrade(tradeIndex);        
     }
     
     function cancelTrade(uint256 tradeIndex) internal {
        trades[tradeIndex].state = TradeState.CANCELLED;
     }
     function bookTrade(uint256 tradeIndex) internal {
-       trades[tradeIndex].state = TradeState.EXECUTED;
-       // credit and debit accounts
+       var t = trades[tradeIndex];
+       t.state = TradeState.EXECUTED;
+       uint cash = t.unitprice * t.units;
+       accounts[t.buyer].cash -=  cash;
+       accounts[t.seller].cash +=  cash;
        
+       accounts[t.buyer].securitypositions +=  t.units;
+       accounts[t.seller].securitypositions -=  t.units;
        
        
     }
+    
+    
     
     //
     // loans ///////////////////////////////////////////////////////////////////
     //
 
-
+    function checkAvailableSecurities(address seller) constant returns (uint256 available){
+        available=0;
+        for (uint256 i=0; i< agreements.length; i++){
+            var a = agreements[i];
+            if (a.to == seller){
+                available += accounts[a.from].securitypositions;
+   
+            }
+        }
+    }
+    
+    function processLoans(address seller, uint loan_amount) {
+        var remaining=loan_amount;
+        for (uint256 i=0; i< agreements.length; i++){
+            var a = agreements[i];
+            if (a.to == seller){
+                var available = accounts[a.from].securitypositions;
+                if (available == 0) continue;
+                if (available >= remaining){
+                    openLoan(i, remaining);
+                    return;
+                }
+                else {
+                    openLoan(i, available);
+                    remaining -= available;
+                }
+   
+            }
+        }
+    }
+    
+    function openLoan (uint i, uint units){
+        var r = agreements[i];
+        var lender = r.from;
+        var borrower = r.to; 
+        accounts[lender].securitypositions -= units;
+        accounts[borrower].securitypositions += units;
+        var margin  = units * market_price * (100+r.haircut)/100;
+        accounts[lender].cash += margin;
+        accounts[borrower].cash -= margin;
+    }
+    
     //
     // margin monitoring ///////////////////////////////////////////////////////
     //
@@ -301,7 +359,7 @@ contract StarbuckersDemo is Starbuckers{
         address newGuy2 = 0x14723a09acff6d2a60dcdf7aa4aff308fddc160c;
 
         address owner = msg.sender;
-        accounts[owner] = Account(3000, 500);
+        accounts[owner] = Account(3000, 500, 0);
     }
     
     function demo(){init(newGuy, newGuy2);}
@@ -309,11 +367,12 @@ contract StarbuckersDemo is Starbuckers{
     function init(address newGuy, address newGuy2){
         //mapping (string => uint256) secs;
         //secs["BARC.L"] = 1000;
-        accounts[newGuy] = Account(1000, 100);
-        accounts[newGuy2] = Account(5000, 500);
+        accounts[newGuy] = Account(1000, 100, 0);
+        accounts[newGuy2] = Account(5000, 500, 0);
         proposeLendingAgreement(newGuy2, "BARC.L", 100, 200);
         processOrder(newGuy, newGuy2, BuySell.BUY, "BARC.L", 10, 20);
         processOrder(newGuy2, newGuy, BuySell.SELL, "BARC.L", 10, 20);
+        
         createTrade(0,0);
         log0("trade created");
         processTrade(0);
@@ -321,4 +380,3 @@ contract StarbuckersDemo is Starbuckers{
         //accounts[newGuy].securitypositions["BARC.L"] = 1000;
     }
 }
-
