@@ -47,7 +47,7 @@ export default class AppContainer extends Component {
   fetchData() {
     const contract = this.getContract();
 
-    this.getAccount().then(
+    return this.getAccount().then(
       account => {
         this.setState({ account: account });
         return this.fetchDataForAccount(account);
@@ -126,8 +126,6 @@ export default class AppContainer extends Component {
         });
       },
     );
-
-    //this.setState({ cash: cash.toNumber(), securities: securities });
   }
 
   proposeLendingAgreement(fields) {
@@ -141,6 +139,13 @@ export default class AppContainer extends Component {
         fields.rate,
         { from: account },
       ),
+    ).then(
+      x => {
+        this.fetchData();
+        // allow to close dialog as soon as transaction is sent
+        // not waiting for data refresh
+        return null;
+      },
     );
   }
 
