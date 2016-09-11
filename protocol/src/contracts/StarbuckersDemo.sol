@@ -5,16 +5,20 @@ import "strings.sol";
 contract Starbuckers { //is BlockOneOracleClient(){
     using strings for *;
 
-    struct Account {
-        uint cash;
-        uint securitypositions;
-    }
+    // enum
     
     enum State { PENDING, ACTIVE, REJECTED, CANCELLED }
     enum BuySell {BUY, SELL}
     enum TradeState {PENDING, EXECUTED, CANCELLED}
     
-    struct Agreement {
+    // struct
+    
+    struct Account {
+        uint cash;
+        uint securitypositions;
+    }
+    
+    struct Agreement{
         address from;
         address to;
         string securitycode; //e.g. BARC.L
@@ -30,6 +34,95 @@ contract Starbuckers { //is BlockOneOracleClient(){
         string securitycode;
         uint16 units;
         uint32 unitprice;
+    }
+
+    struct Trade { 
+        address buyer;
+        address seller;
+        string securitycode;
+        uint16 units;
+        uint32 unitprice;
+        TradeState state;
+    }
+    
+    struct Loan {
+        address lender;
+        address borrower;
+        string securitycode;
+        uint16 units;
+        uint32 ts_start;
+        uint32 ts_end;
+        uint32 margin;
+        uint32 interest_paid;
+        LoanState state;
+    }    
+    
+
+    
+    // main variables
+        
+    uint256 market_price;
+    
+    mapping (address => Account) accounts;
+    Agreement[] public agreements;
+    Order[] sellOrders;
+    Order[] buyOrders;
+    Trade[] trades;
+    
+    //
+    // accounts ////////////////////////////////////////////////////////////////
+    //
+    
+    function getAccountBalance(address _who) constant returns (uint cash, uint securitybalance) {
+        cash = accounts[_who].cash;
+        securitybalance = accounts[_who].securitypositions;
+    }
+
+    //
+    // agreements //////////////////////////////////////////////////////////////
+    //
+
+    function getAgreement(uint _lendingId) constant returns (address from, address to, string securitycode, uint16 haircut, uint16 lendigrate) {
+        var a = agreements[_lendingId];
+        from = a.from;
+        to = a.to;
+        securitycode = a.securitycode;
+        haircut = a.haircut;
+        lendigrate = a.lendingrate;
+    }
+    
+    function getAgreementArraySize() constant returns(uint256 size){
+        size = agreements.length;
+    }
+    
+    function proposeLendingAgreement(address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) {
+    
+       var a = Agreement(msg.sender, _to, _securitycode, _haircut, _lendigrate, State.PENDING);
+       uint256 lendingId = agreements.length; //shortcut because lenght-1 is pos
+       agreements.push(a);
+       
+       LogAgreementStateChange(a.from, a.to, lendingId, State.PENDING);
+    }
+    
+    function  acceptLendingAgreement(uint _lendingId){
+        bool found=false;
+        var a = agreements[_lendingId];
+        if (msg.sender != a.to) throw;
+        if (State.PENDING != a.state) throw;
+        
+        a.state= State.ACTIVE;
+        LogAgreementStateChange(a.from, a.to, _lendingId, State.ACTIVE);
+    }
+    
+    //
+    // orders //////////////////////////////////////////////////////////////////
+    //
+
+    function getOrderArraySize(BuySell bs) constant returns (uint){
+        if (BuySell.BUY == bs){
+            return buyOrders.length;
+        }
+        return sellOrders.length;
     }
     
     function getBuyOrder(uint index) constant returns ( address from, address to, BuySell buysell, string securitycode, uint16 units, uint32 unitprice){   
@@ -50,59 +143,6 @@ contract Starbuckers { //is BlockOneOracleClient(){
         securitycode = o.securitycode;
         units = o.units;
         unitprice = o.unitprice;
-    }
-        
-    struct Trade { 
-        address buyer;
-        address seller;
-        string securitycode;
-        uint16 units;
-        uint32 unitprice;
-        TradeState state;
-    }
-    
-    function getTrade(uint index) constant returns (address buyer, address seller, string securitycode, uint16 units, uint32 unitprice, TradeState state){
-        
-        buyer = trades[index].buyer;
-        seller = trades[index].seller;
-        securitycode = trades[index].securitycode;
-        units = trades[index].units;
-        unitprice = trades[index].unitprice;
-        state = trades[index].state;
-    }
-    
-    Order[] buyOrders;
-    
-    function getOrderArraySize(BuySell bs) constant returns (uint){
-        if (BuySell.BUY == bs){
-            return buyOrders.length;
-        }
-        return sellOrders.length;
-    }
-    Order[] sellOrders;
-    Trade[] trades;
-    
-    uint256 market_price;
-    
-    mapping (address => Account) accounts;
-    
-    function getAccountBalance(address _who) constant returns (uint cash, uint securitybalance) {
-        cash = accounts[_who].cash;
-        securitybalance = accounts[_who].securitypositions;
-    }
-    
-    Agreement[] public agreements;
-    function getAgreement(uint _lendingId) constant returns (address from, address to, string securitycode, uint16 haircut, uint16 lendigrate) {
-        var a = agreements[_lendingId];
-        from = a.from;
-        to = a.to;
-        securitycode = a.securitycode;
-        haircut = a.haircut;
-        lendigrate = a.lendingrate;
-    }
-    
-    function getAgreementArraySize() constant returns(uint256 size){
-        size = agreements.length;
     }
     
     function processOrder(address _from, address _to, BuySell _buysell, string _securitycode, uint16 _units, uint32 _unitprice) {
@@ -134,6 +174,20 @@ contract Starbuckers { //is BlockOneOracleClient(){
         if (buy.units != sell.units) return false;
         if (buy.unitprice != sell.unitprice) return false;
         return true;
+    }
+    
+    //
+    // trades //////////////////////////////////////////////////////////////////
+    //
+    
+    function getTrade(uint index) constant returns (address buyer, address seller, string securitycode, uint16 units, uint32 unitprice, TradeState state){
+        
+        buyer = trades[index].buyer;
+        seller = trades[index].seller;
+        securitycode = trades[index].securitycode;
+        units = trades[index].units;
+        unitprice = trades[index].unitprice;
+        state = trades[index].state;
     }
     
     function createTrade(uint256 indexBuy, uint256 indexSell){
@@ -189,7 +243,24 @@ contract Starbuckers { //is BlockOneOracleClient(){
     }
     function bookTrade(uint256 tradeIndex) internal {
        trades[tradeIndex].state = TradeState.EXECUTED;
+       // credit and debit accounts
+       
+       
+       
     }
+    
+    //
+    // loans ///////////////////////////////////////////////////////////////////
+    //
+
+
+    //
+    // margin monitoring ///////////////////////////////////////////////////////
+    //
+
+
+    
+    // utilities & initialisations /////////////////////////////////////////////
     
     function abs(int signedInt) constant internal returns (uint) {
         if(signedInt < 0) {
@@ -197,26 +268,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
         }
         return  uint(signedInt);
     }
-    
-    function proposeLendingAgreement(address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) {
-    
-       var a = Agreement(msg.sender, _to, _securitycode, _haircut, _lendigrate, State.PENDING);
-       uint256 lendingId = agreements.length; //shortcut because lenght-1 is pos
-       agreements.push(a);
-       
-       LogAgreementStateChange(a.from, a.to, lendingId, State.PENDING);
-    }
-    
-    function  acceptLendingAgreement(uint _lendingId){
-        bool found=false;
-        var a = agreements[_lendingId];
-        if (msg.sender != a.to) throw;
-        if (State.PENDING != a.state) throw;
-        
-        a.state= State.ACTIVE;
-        LogAgreementStateChange(a.from, a.to, _lendingId, State.ACTIVE);
-    }
-    
+
     function Starbuckers(){
         //makeOracleRequest("BARC.L", now + 60 seconds);
     }
@@ -267,3 +319,4 @@ contract StarbuckersDemo is Starbuckers{
         //accounts[newGuy].securitypositions["BARC.L"] = 1000;
     }
 }
+
