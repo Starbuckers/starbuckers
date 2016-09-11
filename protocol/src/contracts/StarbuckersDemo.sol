@@ -14,7 +14,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
     enum BuySell {BUY, SELL}
     enum TradeState {PENDING, EXECUTED, CANCELLED}
     
-    struct Agreement{
+    struct Agreement {
         address from;
         address to;
         string securitycode; //e.g. BARC.L

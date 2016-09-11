@@ -5,6 +5,7 @@ import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColu
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
+import TextField from 'material-ui/TextField';
 
 import '../../vendor/bootstrap/css/bootstrap.min.css';
 import '../../vendor/bootstrap/css/bootstrap-theme.min.css';
@@ -17,6 +18,8 @@ export default class App extends Component {
       account: PropTypes.string,
       cash: PropTypes.number,
       securities: PropTypes.object,
+
+      proposeLendingAgreement: PropTypes.func,
     };
   }
 
@@ -101,7 +104,9 @@ export default class App extends Component {
           </Table>
         </CardText>
         <CardActions>
-          <CreateLendingAgreementDialog />
+          <CreateLendingAgreementDialog
+            proposeLendingAgreement={this.props.proposeLendingAgreement}
+          />
         </CardActions>
       </Card>
     );
@@ -109,8 +114,17 @@ export default class App extends Component {
 }
 
 class CreateLendingAgreementDialog extends React.Component {
+  static get propTypes() {
+    return {
+      proposeLendingAgreement: PropTypes.func,
+    };
+  }
+
   state = {
     open: false,
+    rate: '3',
+    haircut: '10',
+    security: 'BARC.L',
   };
 
   handleOpen = () => {
@@ -119,6 +133,17 @@ class CreateLendingAgreementDialog extends React.Component {
 
   handleClose = () => {
     this.setState({open: false});
+  };
+
+  handleSubmit() {
+    this.props.proposeLendingAgreement({
+      rate: this.state.rate,
+      haircut: this.state.haircut,
+      recipient: this.state.recipient,
+      security: this.state.security,    
+    }).then(
+      x => this.handleClose(),
+    );
   };
 
   render() {
@@ -132,7 +157,7 @@ class CreateLendingAgreementDialog extends React.Component {
         label="Create"
         primary={true}
         keyboardFocused={true}
-        onTouchTap={this.handleClose}
+        onTouchTap={x => this.handleSubmit(x)}
       />,
     ];
 
@@ -144,7 +169,46 @@ class CreateLendingAgreementDialog extends React.Component {
           open={true}
           onRequestClose={this.handleClose}
         >
-          hello
+          <TextField
+            hintText="recipient address"
+            floatingLabelText="Recipient"
+            value={this.state.recipient || ""}
+            onChange={
+              event => this.setState({
+                recipient: event.target.value
+              })
+            }
+          />
+          <TextField
+            hintText="which security you want to lend"
+            floatingLabelText="Security"
+            value={this.state.security}
+            onChange={
+              event => this.setState({
+                security: event.target.value
+              })
+            }
+          />
+          <TextField
+            hintText="haircut"
+            floatingLabelText="Haircut, %"
+            value={this.state.haircut}
+            onChange={
+              event => this.setState({
+                haircut: event.target.value
+              })
+            }
+          />
+          <TextField
+            hintText="lending rate"
+            floatingLabelText="Lending rate, %"
+            value={this.state.rate}
+            onChange={
+              event => this.setState({
+                rate: event.target.value
+              })
+            }
+          />
         </Dialog>
     ) : null;
 

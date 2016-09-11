@@ -14,11 +14,10 @@ export default class AppContainer extends Component {
     this.fetchData();
   }
 
-  fetchData() {
+  getAccount() {
     const web3 = this.getWeb3();
-    const contract = this.getContract();
 
-    const accountRequest = new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       // allow URI override for debugging
       const query = window.location.search.substr(1);
       const query_parts = query.split('&');
@@ -43,8 +42,12 @@ export default class AppContainer extends Component {
         resolve(accs[0]);
       });
     });
+  }
 
-    accountRequest.then(
+  fetchData() {
+    const contract = this.getContract();
+
+    this.getAccount().then(
       account => {
         this.setState({ account: account });
         return this.fetchDataForAccount(account);
@@ -111,10 +114,27 @@ export default class AppContainer extends Component {
     //this.setState({ cash: cash.toNumber(), securities: securities });
   }
 
+  proposeLendingAgreement(fields) {
+    const contract = this.getContract();
+ 
+    return this.getAccount().then(
+      account => contract.proposeLendingAgreement(
+        fields.recipient,
+        fields.security,
+        fields.haircut,
+        fields.rate,
+        { from: account },
+      ),
+    );
+  }
+
   render() {
     return (
       <MuiThemeProvider>
-        <App {...this.state} />
+        <App
+          proposeLendingAgreement={f => this.proposeLendingAgreement(f)}
+          {...this.state}
+        />
       </MuiThemeProvider>
     );
   }
