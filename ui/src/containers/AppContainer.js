@@ -108,7 +108,22 @@ export default class AppContainer extends Component {
         ),
       ),
     ).then(
-      console.log,
+      arr => {
+        this.setState({
+          agreements: arr.map(
+            row => {
+              const [from, to, sec, haircut, rate] = row;
+              return {
+                from: from,
+                to: to,
+                security: sec,
+                haircut: haircut,
+                rate: rate,
+              };
+            },
+          ),
+        });
+      },
     );
 
     //this.setState({ cash: cash.toNumber(), securities: securities });

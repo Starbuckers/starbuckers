@@ -18,6 +18,7 @@ export default class App extends Component {
       account: PropTypes.string,
       cash: PropTypes.number,
       securities: PropTypes.object,
+      agreements: PropTypes.array,
 
       proposeLendingAgreement: PropTypes.func,
     };
@@ -72,12 +73,15 @@ export default class App extends Component {
   }
 
   renderLendingAgreementsCard() {
-    const securities = this.props.securities
-      ? Object.keys(this.props.securities).map(
-          key => (
-              <TableRow key={key}>
-                <TableRowColumn>{key}</TableRowColumn>
-                <TableRowColumn>{this.props.securities[key]}</TableRowColumn>
+    const agreements = this.props.agreements
+      ? this.props.agreements.map(
+          (a, i) => (
+              <TableRow key={i}>
+                <TableRowColumn>{a.from}</TableRowColumn>
+                <TableRowColumn>{a.to}</TableRowColumn>
+                <TableRowColumn>{a.security}</TableRowColumn>
+                <TableRowColumn>{a.haircut.toNumber()}%</TableRowColumn>
+                <TableRowColumn>{a.rate.toNumber()}%</TableRowColumn>
               </TableRow>
           )
         )
@@ -90,16 +94,15 @@ export default class App extends Component {
           <Table selectable={false}>
             <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
               <TableRow>
-                <TableHeaderColumn>Type</TableHeaderColumn>
-                <TableHeaderColumn>Amount</TableHeaderColumn>
+                <TableHeaderColumn>From</TableHeaderColumn>
+                <TableHeaderColumn>To</TableHeaderColumn>
+                <TableHeaderColumn>Security</TableHeaderColumn>
+                <TableHeaderColumn>Haircut</TableHeaderColumn>
+                <TableHeaderColumn>Rate</TableHeaderColumn>
               </TableRow>
             </TableHeader>
             <TableBody displayRowCheckbox={false}>
-              <TableRow>
-                <TableRowColumn>Cash</TableRowColumn>
-                <TableRowColumn>${this.props.cash}</TableRowColumn>
-              </TableRow>
-              {securities}
+              {agreements}
             </TableBody>
           </Table>
         </CardText>
