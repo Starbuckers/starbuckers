@@ -294,6 +294,18 @@ export default class AppContainer extends Component {
     );
   }
 
+  runDemo2() {
+    const contract = this.getContract();
+ 
+    return this.getAccount().then(
+      account => contract.step2(
+        { from: account },
+      ),
+    ).then(
+      x => this.fetchData(),
+    );
+  }
+
   render() {
     return (
       <MuiThemeProvider>
@@ -301,6 +313,7 @@ export default class AppContainer extends Component {
           proposeLendingAgreement={f => this.proposeLendingAgreement(f)}
           acceptLendingAgreement={i => this.acceptLendingAgreement(i)}
           runDemo={x => this.runDemo()}
+          runDemo2={x => this.runDemo2()}
           {...this.state}
         />
       </MuiThemeProvider>
