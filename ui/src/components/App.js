@@ -26,12 +26,17 @@ export default class App extends Component {
       loans: PropTypes.array,
 
       proposeLendingAgreement: PropTypes.func,
+      runDemo: PropTypes.func,
     };
   }
 
   render() {
     return (
       <div>
+        <FlatButton
+          label="Execute demo scenario"
+          onTouchTap={this.props.runDemo}
+        />
         {this.renderBalancesCard()}
         {this.renderLendingAgreementsCard()}
         {this.renderOrdersCard()}

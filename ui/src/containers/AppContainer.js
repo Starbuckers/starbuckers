@@ -282,12 +282,25 @@ export default class AppContainer extends Component {
     );
   }
 
+  runDemo() {
+    const contract = this.getContract();
+ 
+    return this.getAccount().then(
+      account => contract.demo(
+        { from: account },
+      ),
+    ).then(
+      x => this.fetchData(),
+    );
+  }
+
   render() {
     return (
       <MuiThemeProvider>
         <App
           proposeLendingAgreement={f => this.proposeLendingAgreement(f)}
           acceptLendingAgreement={i => this.acceptLendingAgreement(i)}
+          runDemo={x => this.runDemo()}
           {...this.state}
         />
       </MuiThemeProvider>
