@@ -112,13 +112,14 @@ export default class AppContainer extends Component {
         this.setState({
           agreements: arr.map(
             row => {
-              const [from, to, sec, haircut, rate] = row;
+              const [from, to, sec, haircut, rate, state] = row;
               return {
                 from: from,
                 to: to,
                 security: sec,
                 haircut: haircut,
                 rate: rate,
+                state: state,
               };
             },
           ),

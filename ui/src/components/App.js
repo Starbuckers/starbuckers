@@ -73,6 +73,8 @@ export default class App extends Component {
   }
 
   renderLendingAgreementsCard() {
+    const stateNames = ['PENDING', 'ACTIVE', 'REJECTED', 'CANCELLED'];
+    
     const agreements = this.props.agreements
       ? this.props.agreements.map(
           (a, i) => (
@@ -82,6 +84,7 @@ export default class App extends Component {
                 <TableRowColumn>{a.security}</TableRowColumn>
                 <TableRowColumn>{a.haircut.toNumber()}%</TableRowColumn>
                 <TableRowColumn>{a.rate.toNumber()}%</TableRowColumn>
+                <TableRowColumn>{stateNames[a.state.toNumber()]}</TableRowColumn>
               </TableRow>
           )
         )
@@ -99,6 +102,7 @@ export default class App extends Component {
                 <TableHeaderColumn>Security</TableHeaderColumn>
                 <TableHeaderColumn>Haircut</TableHeaderColumn>
                 <TableHeaderColumn>Rate</TableHeaderColumn>
+                <TableHeaderColumn>State</TableHeaderColumn>
               </TableRow>
             </TableHeader>
             <TableBody displayRowCheckbox={false}>
