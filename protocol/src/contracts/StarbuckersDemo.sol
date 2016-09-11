@@ -20,7 +20,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
 
   modifier entitledUsersOnly {
     if (!Entitlement(getEntitlement()).isEntitled(msg.sender)) throw;
-    _
+    _;
   }
 
 
@@ -301,7 +301,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
     // loans ///////////////////////////////////////////////////////////////////
     //
     function getLoansArraySize() constant returns (uint){
-        return trades.length;
+        return loans.length;
     }
     
     function getLoan(uint i) constant returns(   address lender,
@@ -312,7 +312,8 @@ contract Starbuckers { //is BlockOneOracleClient(){
         uint32 ts_end,
         uint32 margin,
         uint32 interest_paid,
-        LoanState state){
+        LoanState state)
+        {
             
         var l= loans[i];
         lender = l.lender;
