@@ -1,5 +1,5 @@
-pragma solidity ^0.4.1;
-import "github.com/Arachnid/solidity-stringutils/strings.sol";
+// pragma solidity ^0.4.1;
+import "strings.sol";
 import "BlockOneOracleClient.sol";
 
 contract withEnlistedSecurities {
@@ -9,7 +9,7 @@ contract withEnlistedSecurities {
         var v2 = securityCode.toSlice();
         
         if (v1.equals(v2)) {
-            _;
+            _
         }
     }
 }
@@ -184,6 +184,16 @@ contract Starbuckers is withEnlistedSecurities, BlockOneOracleClient(){
   function makeOracleRequest(bytes32 _ric, uint _timestamp) {
       BlockOneOracleClientTest_onOracleRequest(_ric,_timestamp,oracleRequestOneByMarketTime(_ric,_timestamp));
   }
+
+  // Please implement this method to receive a success response from the Oracle, ensuring to match up requestId
+  function onOracleResponse(uint _requestId, uint ts_millis, bytes32 _ric, uint last_trade, uint bid, uint ask, uint bid_size, uint ask_size) {
+    // TODO
+  }
+
+  // Please implement this method to receive a failure response from the Oracle, ensuring to match up requestId
+  function onOracleFailure(uint _requestId, uint _reason) {
+    // TODO
+  }
 } 
 
 contract StarbuckersDemo is Starbuckers{
@@ -191,7 +201,11 @@ contract StarbuckersDemo is Starbuckers{
     function init(address newGuy){
         mapping (string => uint256) secs;
         secs["BARC.L"] = 1000;
-        accounts[newGuy] = Account(1000);
-        accounts[newGuy].securitypositions["BARC.L"] = 1000;
+        accounts[newGuy] = Account(3000);
+        accounts[newGuy].securitypositions["BARC.L"] = 500;
+    }
+
+    function StarbuckersDemo() {
+        init(msg.sender);
     }
 }

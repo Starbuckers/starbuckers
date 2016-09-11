@@ -1,4 +1,4 @@
 module.exports = function(deployer) {
   deployer.autolink();
-  deployer.deploy(StarBuckers);
+  deployer.deploy(StarbuckersDemo);
 };

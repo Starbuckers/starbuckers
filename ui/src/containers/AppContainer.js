@@ -16,16 +16,16 @@ export default class AppContainer extends Component {
     const web3 = this.getWeb3();
     const contract = this.getContract();
 
-    const accountRequest = new Promise((resolve) => {
+    const accountRequest = new Promise((resolve, reject) => {
       web3.eth.getAccounts((err, accs) => {
         if (err != null) {
           alert("There was an error fetching your accounts.");
-          return;
+          reject();
         }
 
         if (accs.length == 0) {
           alert("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
-          return;
+          reject();
         }
 
         resolve(accs[0]);
@@ -39,13 +39,17 @@ export default class AppContainer extends Component {
       }
     ).then(
       account => {
-        return new Promise((resolve) => {
-          web3.eth.getAccounts((err, accs) => {
-            contract.getBalance.call(account).then(balance => {
-              this.setState({ balance: balance.toNumber() });
-              resolve();
-            });
-          });
+        // TODO: do not hardcode it here
+        // furthermore, we should have many of those
+        const security = 'BARC.L';
+
+        return contract.getAccountBalance.call(account, security).then(balances => {
+          const [cash, barcl] = balances;
+
+          const securities = {};
+          securities[security] = barcl.toNumber();
+
+          this.setState({ cash: cash.toNumber(), securities: securities });
         });
       },
     );
@@ -66,9 +70,14 @@ export default class AppContainer extends Component {
 
   getContract() {
     const web3 = this.getWeb3();
-    const Contract = require("../../../protocol/lib/build/contracts/StarBuckers.sol.js");
+    const Contract = require("../../../protocol/lib/build/contracts/StarbuckersDemo.sol.js");
     Contract.setProvider(web3.currentProvider);
-    return Contract.deployed();
+    const contract = Contract.deployed();
+    
+    // for interactive debug
+    window.contract = contract;
+
+    return contract;
   }
 
   render() {

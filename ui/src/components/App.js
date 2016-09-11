@@ -6,9 +6,9 @@ import '../../vendor/bootstrap/css/bootstrap-theme.min.css';
 export default class App extends Component {
   static get propTypes() {
     return {
-      balance: PropTypes.number,
       account: PropTypes.string,
-      loading: PropTypes.bool.isRequired,
+      cash: PropTypes.number,
+      securities: PropTypes.object,
     };
   }
 
@@ -25,7 +25,7 @@ export default class App extends Component {
         <h1>Hello World!</h1>
         {this.loadingMessage()}
         <p>Your account: {this.props.account}</p>
-        <p>Balance: {this.props.balance}</p>
+        <p>Cash available: {this.props.cash}</p>
       </div>
     );
   }
