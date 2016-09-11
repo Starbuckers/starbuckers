@@ -105,8 +105,8 @@ export default class App extends Component {
                 <TableRowColumn>{a.from}</TableRowColumn>
                 <TableRowColumn>{a.to}</TableRowColumn>
                 <TableRowColumn>{a.security}</TableRowColumn>
-                <TableRowColumn>{a.haircut.toNumber()}%</TableRowColumn>
-                <TableRowColumn>{a.rate.toNumber()}%</TableRowColumn>
+                <TableRowColumn>{a.haircut.toNumber() / 100}%</TableRowColumn>
+                <TableRowColumn>{a.rate.toNumber() / 100}%</TableRowColumn>
                 <TableRowColumn>{stateNames[a.state.toNumber()]}</TableRowColumn>
                 <TableRowColumn>{makeActions(a, i)}</TableRowColumn>
               </TableRow>
