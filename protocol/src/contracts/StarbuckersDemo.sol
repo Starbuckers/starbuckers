@@ -8,6 +8,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
     // enum
     
     enum State { PENDING, ACTIVE, REJECTED, CANCELLED }
+    enum LoanState {}
     enum BuySell {BUY, SELL}
     enum TradeState {PENDING, EXECUTED, CANCELLED}
     
