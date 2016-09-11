@@ -1,5 +1,5 @@
-//pragma solidity ^0.4.1;
-import "github.com/Arachnid/solidity-stringutils/strings.sol";
+// pragma solidity ^0.4.1;
+import "strings.sol";
 //import "BlockOneOracleClient.sol";
 
 contract Starbuckers { //is BlockOneOracleClient(){
@@ -245,7 +245,9 @@ contract StarbuckersDemo is Starbuckers{
         log0("init");
         address newGuy = 0xca35b7d915458ef540ade6068dfe2f44e8fa733c;
         address newGuy2 = 0x14723a09acff6d2a60dcdf7aa4aff308fddc160c;
-        
+
+        address owner = msg.sender;
+        accounts[owner] = Account(3000, 500);
     }
     
     function demo(){init(newGuy, newGuy2);}
