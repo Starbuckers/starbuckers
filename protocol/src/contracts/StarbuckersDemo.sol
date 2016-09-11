@@ -97,9 +97,10 @@ contract Starbuckers { //is BlockOneOracleClient(){
     // accounts ////////////////////////////////////////////////////////////////
     //
     
-    function getAccountBalance(address _who) constant returns (uint cash, uint securitybalance) {
+    function getAccountBalance(address _who) constant returns (uint cash, uint securitybalance, uint margin) {
         cash = accounts[_who].cash;
         securitybalance = accounts[_who].securitypositions;
+        margin = accounts[_who].margin;
     }
 
     //
@@ -121,8 +122,12 @@ contract Starbuckers { //is BlockOneOracleClient(){
     }
     
     function proposeLendingAgreement(address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) {
+        proposeLendingAgreement(msg.sender, _to, _securitycode, _haircut, _lendigrate);
+    }
+        
+    function proposeLendingAgreement(address _from, address _to, string _securitycode, uint16 _haircut, uint16 _lendigrate) {
     
-       var a = Agreement(msg.sender, _to, _securitycode, _haircut, _lendigrate, State.PENDING);
+       var a = Agreement(_from, _to, _securitycode, _haircut, _lendigrate, State.PENDING);
        uint256 lendingId = agreements.length; //shortcut because lenght-1 is pos
        agreements.push(a);
        
@@ -416,7 +421,7 @@ contract StarbuckersDemo is Starbuckers{
 
         address owner = msg.sender;
         accounts[owner] = Account(3000, 500, 0);
-        demo();
+        
     }
     
     function demo(){init(newGuy, newGuy2);}
@@ -424,11 +429,18 @@ contract StarbuckersDemo is Starbuckers{
     function init(address newGuy, address newGuy2){
         //mapping (string => uint256) secs;
         //secs["BARC.L"] = 1000;
+        accounts[0x1] = Account(10000000, 100, 0);
+        accounts[0x2] = Account(50000000, 100, 0);
         accounts[newGuy] = Account(1000, 100, 0);
         accounts[newGuy2] = Account(5000, 500, 0);
-        proposeLendingAgreement(newGuy2, "BARC.L", 100, 200);
-        processOrder(newGuy, newGuy2, BuySell.BUY, "BARC.L", 10, 17450);
-        processOrder(newGuy2, newGuy, BuySell.SELL, "BARC.L", 10, 17450);
+        proposeLendingAgreement(newGuy, 0x1, "BARC.L", 1000, 300);
+        proposeLendingAgreement(newGuy2, 0x1, "BARC.L", 1500, 400);
+        processOrder(0x2, 0x1, BuySell.BUY, "BARC.L", 10, 17450);
+        processOrder(0x1, 0x2, BuySell.SELL, "BARC.L", 10, 17450);
+        
+        processOrder(0x2, 0x1, BuySell.BUY, "BARC.L", 500, 17450);
+        processOrder(0x1, 0x2, BuySell.SELL, "BARC.L", 500, 17450);
+        
     
         log0("trade created");
         //processTrade(0);
