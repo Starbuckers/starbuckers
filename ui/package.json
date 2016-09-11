@@ -36,18 +36,18 @@
   "dependencies": {
     "babel-cli": "^6.14.0",
     "bluebird": "^3.3.5",
+    "ethereumjs-testrpc": "^2.2.7",
     "invariant": "^2.2.1",
     "json-loader": "^0.5.4",
-    "lodash": "^4.11.1",
+    "lodash": "^4.12.0",
+    "material-ui": "^0.15.4",
     "react": "^15.0.2",
     "react-dom": "^15.0.2",
-    "starbuckers": "file:../protocol",
-    "web3": "^0.17.0-alpha",
-    "ethereumjs-testrpc": "^2.2.7",
-    "lodash": "^4.12.0",
+    "react-tap-event-plugin": "^1.0.0",
     "scrypt": "^6.0.3",
     "secp256k1": "^3.2.0",
     "sha3": "^1.2.0",
+    "starbuckers": "file:../protocol",
     "truffle": "^2.0.8",
     "web3": "^0.16.0"
   }

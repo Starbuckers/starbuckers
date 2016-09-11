@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Web3 from 'web3';
 
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import App from '../components/App';
 
 export default class AppContainer extends Component {
@@ -82,7 +83,9 @@ export default class AppContainer extends Component {
 
   render() {
     return (
-      <App {...this.state} />
+      <MuiThemeProvider>
+        <App {...this.state} />
+      </MuiThemeProvider>
     );
   }
 }
