@@ -76,6 +76,18 @@ export default class App extends Component {
 
   renderLendingAgreementsCard() {
     const stateNames = ['PENDING', 'ACTIVE', 'REJECTED', 'CANCELLED'];
+
+    const makeActions = (agreement, index) => {
+      if (stateNames[agreement.state.toNumber()] === 'PENDING') {
+        return (
+          <AcceptButton
+            onConfirm={x => this.props.acceptLendingAgreement(index)}
+          />
+        );
+      }
+
+      return <div />;
+    };
     
     const agreements = this.props.agreements
       ? this.props.agreements.map(
@@ -87,6 +99,7 @@ export default class App extends Component {
                 <TableRowColumn>{a.haircut.toNumber()}%</TableRowColumn>
                 <TableRowColumn>{a.rate.toNumber()}%</TableRowColumn>
                 <TableRowColumn>{stateNames[a.state.toNumber()]}</TableRowColumn>
+                <TableRowColumn>{makeActions(a, i)}</TableRowColumn>
               </TableRow>
           )
         )
@@ -107,6 +120,7 @@ export default class App extends Component {
                 <TableHeaderColumn>Haircut</TableHeaderColumn>
                 <TableHeaderColumn>Rate</TableHeaderColumn>
                 <TableHeaderColumn>State</TableHeaderColumn>
+                <TableHeaderColumn>Actions</TableHeaderColumn>
               </TableRow>
             </TableHeader>
             <TableBody displayRowCheckbox={false}>
@@ -240,6 +254,59 @@ class CreateLendingAgreementDialog extends React.Component {
         />
 
         {dialog}
+      </div>
+    );
+  }
+}
+
+class AcceptButton extends React.Component {
+  static get propTypes() {
+    return {
+      onConfirm: PropTypes.func,
+    };
+  }
+
+  state = {
+    open: false,
+  };
+
+  handleOpen = () => {
+    this.setState({open: true});
+  };
+
+  handleClose = () => {
+    this.setState({open: false});
+  };
+
+  handleConfirm() {
+    this.props.onConfirm().then(x => this.handleClose()); 
+  }
+
+  render() {
+    const actions = [
+      <FlatButton
+        label="Cancel"
+        primary={true}
+        onTouchTap={x => this.handleClose(x)}
+      />,
+      <FlatButton
+        label="Confirm"
+        primary={true}
+        keyboardFocused={true}
+        onTouchTap={x => this.handleConfirm(x)}
+      />,
+    ];
+
+    return (
+      <div>
+        <FlatButton label="Accept" onTouchTap={this.handleOpen} primary={true} />
+        <Dialog
+          title="Are you sure you want to accept this agreement?"
+          actions={actions}
+          modal={true}
+          open={this.state.open}
+          onRequestClose={this.handleClose}
+        />
       </div>
     );
   }

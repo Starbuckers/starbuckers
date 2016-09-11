@@ -150,11 +150,30 @@ export default class AppContainer extends Component {
     );
   }
 
+  acceptLendingAgreement(index) {
+    const contract = this.getContract();
+ 
+    return this.getAccount().then(
+      account => contract.acceptLendingAgreement(
+        index,
+        { from: account },
+      ),
+    ).then(
+      x => {
+        this.fetchData();
+        // allow to close dialog as soon as transaction is sent
+        // not waiting for data refresh
+        return null;
+      },
+    );
+  }
+
   render() {
     return (
       <MuiThemeProvider>
         <App
           proposeLendingAgreement={f => this.proposeLendingAgreement(f)}
+          acceptLendingAgreement={i => this.acceptLendingAgreement(i)}
           {...this.state}
         />
       </MuiThemeProvider>
