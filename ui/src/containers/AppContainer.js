@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Web3 from 'web3';
+import _ from 'underscore'
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import App from '../components/App';
@@ -43,29 +44,12 @@ export default class AppContainer extends Component {
       });
     });
 
-    const dataRequest = accountRequest.then(
+    accountRequest.then(
       account => {
         this.setState({ account: account });
-        return account;
-      }
-    ).then(
-      account => {
-        // TODO: do not hardcode it here
-        // furthermore, we should have many of those
-        const security = 'BARC.L';
-
-        return contract.getAccountBalance.call(account, security).then(balances => {
-          const [cash, barcl] = balances;
-
-          const securities = {};
-          securities[security] = barcl.toNumber();
-
-          this.setState({ cash: cash.toNumber(), securities: securities });
-        });
+        return this.fetchDataForAccount(account);
       },
-    );
-
-    dataRequest.then(data => {
+    ).then(_ => {
       this.setState({loading: false });
     });
   }
@@ -89,6 +73,42 @@ export default class AppContainer extends Component {
     window.contract = contract;
 
     return contract;
+  }
+
+  fetchDataForAccount(account) {
+    return Promise.all([
+      this.fetchBalance(account),
+      this.fetchLendingAgreements(account),
+    ]);
+  }
+
+  fetchBalance(account) {
+    // TODO: do not hardcode it here
+    // furthermore, we should have many of those
+    const security = 'BARC.L';
+
+    return contract.getAccountBalance.call(account, security).then(balances => {
+      const [cash, barcl] = balances;
+
+      const securities = {};
+      securities[security] = barcl.toNumber();
+
+      this.setState({ cash: cash.toNumber(), securities: securities });
+    });
+  }
+
+  fetchLendingAgreements(account) {
+    return contract.getAgreementArraySize.call().then(
+      size => Promise.all(
+        _.range(size).map(
+          index => contract.getAgreement.call(index),
+        ),
+      ),
+    ).then(
+      console.log,
+    );
+
+    //this.setState({ cash: cash.toNumber(), securities: securities });
   }
 
   render() {
