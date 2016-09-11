@@ -6,6 +6,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
+import LinearProgress from 'material-ui/LinearProgress';
 
 import '../../vendor/bootstrap/css/bootstrap.min.css';
 import '../../vendor/bootstrap/css/bootstrap-theme.min.css';
@@ -49,8 +50,9 @@ export default class App extends Component {
       <Card>
         <CardTitle
           title={this.props.loading ? "Balances... (wait)" : "Balances"}
-          subtitle={"Account: "+this.props.account}
-        />
+          subtitle={"Account: "+this.props.account}>
+          {this.renderProgress()}
+        </CardTitle>
         <CardText>
           <Table selectable={false}>
             <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
@@ -92,7 +94,9 @@ export default class App extends Component {
 
     return (
       <Card>
-        <CardTitle title="Lending agreements" />
+        <CardTitle title="Lending agreements">
+          {this.renderProgress()}
+        </CardTitle>
         <CardText>
           <Table selectable={false}>
             <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
@@ -117,6 +121,14 @@ export default class App extends Component {
         </CardActions>
       </Card>
     );
+  }
+
+  renderProgress() {
+    if (this.props.loading) {
+      return <LinearProgress mode="indeterminate" />;
+    }
+
+    return <div />;
   }
 }
 

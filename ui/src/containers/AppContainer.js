@@ -6,8 +6,9 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import App from '../components/App';
 
 export default class AppContainer extends Component {
+  state = { loading: false };
+
   componentWillMount() {
-    this.setState({ loading: true });
   }
 
   componentDidMount() {
@@ -45,7 +46,7 @@ export default class AppContainer extends Component {
   }
 
   fetchData() {
-    const contract = this.getContract();
+    this.setState({ loading: true });
 
     return this.getAccount().then(
       account => {
@@ -89,6 +90,7 @@ export default class AppContainer extends Component {
     // TODO: do not hardcode it here
     // furthermore, we should have many of those
     const security = 'BARC.L';
+    const contract = this.getContract();
 
     return contract.getAccountBalance.call(account, security).then(balances => {
       const [cash, barcl] = balances;
@@ -101,6 +103,8 @@ export default class AppContainer extends Component {
   }
 
   fetchLendingAgreements(account) {
+    const contract = this.getContract();
+
     return contract.getAgreementArraySize.call().then(
       size => Promise.all(
         _.range(size).map(
