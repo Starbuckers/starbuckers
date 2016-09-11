@@ -373,6 +373,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
         var margin  = units * market_price * (100+r.haircut)/100;
         accounts[lender].cash += margin;
         accounts[borrower].cash -= margin;
+        loans.push(Loan(lender, borrower, "BARK.L", uint16(units), 0, 0, uint32(margin),0, LoanState.ACTIVE));
     }
     
     //
@@ -422,6 +423,7 @@ contract StarbuckersDemo is Starbuckers{
         address owner = msg.sender;
         accounts[owner] = Account(3000, 500, 0);
         
+        
     }
     
     function demo(){init(newGuy, newGuy2);}
@@ -437,11 +439,13 @@ contract StarbuckersDemo is Starbuckers{
         proposeLendingAgreementFrom(newGuy2, 0x1, "BARC.L", 1500, 400);
         processOrder(0x2, 0x1, BuySell.BUY, "BARC.L", 10, 17450);
         processOrder(0x1, 0x2, BuySell.SELL, "BARC.L", 10, 17450);
-        
-        processOrder(0x2, 0x1, BuySell.BUY, "BARC.L", 500, 17450);
-        processOrder(0x1, 0x2, BuySell.SELL, "BARC.L", 500, 17450);
-        
     
+    }
+    
+    function step2(){
+        processOrder(0x2, 0x1, BuySell.BUY, "BARC.L", 600, 17450);
+        processOrder(0x1, 0x2, BuySell.SELL, "BARC.L", 600, 17450);
+
         log0("trade created");
         //processTrade(0);
         log0("trade processed");
