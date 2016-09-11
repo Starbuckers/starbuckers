@@ -173,7 +173,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
     function processOrder(address _from, address _to, BuySell _buysell, string _securitycode, uint16 _units, uint32 _unitprice) {
         BuySell bs = BuySell(_buysell);
         var oNew = Order (_from, _to, bs, _securitycode, _units, _unitprice, OrderState.PENDING);
-        int256 iMatched = -1;
+        bool iMatched = false;
         for (uint256 i =0; i < orders.length; i++){
             var o = orders[i];
             if (o.state != OrderState.PENDING) continue;
@@ -186,14 +186,14 @@ contract Starbuckers { //is BlockOneOracleClient(){
             if (oNew.units != o.units) continue;
             if (oNew.unitprice != o.unitprice) continue;
             if (oNew.buysell == o.buysell) continue;
-            iMatched = int(i);
+            iMatched = true;
             break;
         }
-        if (iMatched > 0){
-            var j = uint(iMatched);
-            orders[j].state = OrderState.MATCHED;
+        if (iMatched ){
+            
+            orders[i].state = OrderState.MATCHED;
             o.state = OrderState.MATCHED;
-            createTrade(j);
+            createTrade(i);
         }
         orders.push(oNew);
         
