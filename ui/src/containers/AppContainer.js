@@ -8,9 +8,6 @@ import App from '../components/App';
 export default class AppContainer extends Component {
   state = { loading: false };
 
-  componentWillMount() {
-  }
-
   componentDidMount() {
     this.fetchData();
   }
