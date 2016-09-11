@@ -81,6 +81,8 @@ export default class AppContainer extends Component {
       this.fetchBalance(account),
       this.fetchLendingAgreements(account),
       this.fetchOrders(account),
+      this.fetchTrades(account),
+      this.fetchLoans(account),
     ]);
   }
 
@@ -155,6 +157,83 @@ export default class AppContainer extends Component {
                 security: sec,
                 units: units,
                 price: price,
+                state: state,
+              };
+            },
+          ),
+        });
+      },
+    );
+  }
+
+  fetchTrades(account) {
+    const contract = this.getContract();
+
+    return contract.getTradesArraySize.call().then(
+      size => Promise.all(
+        _.range(size).map(
+          index => contract.getTrade.call(index),
+        ),
+      ),
+    ).then(
+      arr => {
+        this.setState({
+          trades: arr.map(
+            row => {
+              const [
+                buyer, seller, security, units, price, state 
+              ] = row;
+
+              return {
+                buyer: buyer,
+                seller: seller,
+                security: security,
+                units: units,
+                price: price,
+                state: state,
+              };
+            },
+          ),
+        });
+      },
+    );
+  }
+
+  fetchLoans(account) {
+    const contract = this.getContract();
+
+    return contract.getLoansArraySize.call().then(
+      size => Promise.all(
+        _.range(size).map(
+          index => contract.getLoan.call(index),
+        ),
+      ),
+    ).then(
+      arr => {
+        this.setState({
+          loans: arr.map(
+            row => {
+              const [
+                lender,
+                borrower,
+                security,
+                units,
+                ts_start,
+                ts_end,
+                margin,
+                interest_paid,
+                state,
+              ] = row;
+
+              return {
+                lender: lender,
+                borrower: borrower,
+                security: security,
+                units: units,
+                ts_start: ts_start,
+                ts_end: ts_end,
+                margin: margin,
+                interest_paid: interest_paid,
                 state: state,
               };
             },

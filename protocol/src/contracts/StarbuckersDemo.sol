@@ -20,7 +20,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
 
   modifier entitledUsersOnly {
     if (!Entitlement(getEntitlement()).isEntitled(msg.sender)) throw;
-    _;
+    _
   }
 
 

@@ -44,6 +44,7 @@
     "react": "^15.0.2",
     "react-dom": "^15.0.2",
     "react-tap-event-plugin": "^1.0.0",
+    "react-timestamp": "^3.0.4",
     "scrypt": "^6.0.3",
     "secp256k1": "^3.2.0",
     "sha3": "^1.2.0",

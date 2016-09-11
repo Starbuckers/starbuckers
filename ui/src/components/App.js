@@ -7,6 +7,7 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import LinearProgress from 'material-ui/LinearProgress';
+import Timestamp from 'react-timestamp';
 
 import '../../vendor/bootstrap/css/bootstrap.min.css';
 import '../../vendor/bootstrap/css/bootstrap-theme.min.css';
@@ -21,6 +22,8 @@ export default class App extends Component {
       securities: PropTypes.object,
       agreements: PropTypes.array,
       orders: PropTypes.array,
+      trades: PropTypes.array,
+      loans: PropTypes.array,
 
       proposeLendingAgreement: PropTypes.func,
     };
@@ -32,6 +35,8 @@ export default class App extends Component {
         {this.renderBalancesCard()}
         {this.renderLendingAgreementsCard()}
         {this.renderOrdersCard()}
+        {this.renderTradesCard()}
+        {this.renderLoansCard()}
       </div>
     );
   }
@@ -189,6 +194,114 @@ export default class App extends Component {
             </TableHeader>
             <TableBody displayRowCheckbox={false}>
               {orders}
+            </TableBody>
+          </Table>
+        </CardText>
+      </Card>
+    );
+  }
+
+  renderTradesCard() {
+    const stateNames = ['PENDING', 'EXECUTED', 'CANCELLED'];
+
+    const trades = this.props.trades
+      ? this.props.trades.map(
+          (a, i) => (
+              <TableRow key={i}>
+                <TableRowColumn>{a.buyer}</TableRowColumn>
+                <TableRowColumn>{a.seller}</TableRowColumn>
+                <TableRowColumn>{a.security}</TableRowColumn>
+                <TableRowColumn>{a.units.toNumber()}</TableRowColumn>
+                <TableRowColumn>£{a.price.toNumber() / 100.0}</TableRowColumn>
+                <TableRowColumn>
+                  {stateNames[a.state.toNumber()]}
+                </TableRowColumn>
+              </TableRow>
+          )
+        )
+        : null;
+
+    return (
+      <Card>
+        <CardTitle title="Trades">
+          {this.renderProgress()}
+        </CardTitle>
+        <CardText>
+          <Table
+            selectable={false}
+            fixedHeader={false}
+            style={{'table-layout': 'auto'}}>
+            <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+              <TableRow>
+                <TableHeaderColumn>Buyer</TableHeaderColumn>
+                <TableHeaderColumn>Seller</TableHeaderColumn>
+                <TableHeaderColumn>Security</TableHeaderColumn>
+                <TableHeaderColumn>Units</TableHeaderColumn>
+                <TableHeaderColumn>Price</TableHeaderColumn>
+                <TableHeaderColumn>State</TableHeaderColumn>
+              </TableRow>
+            </TableHeader>
+            <TableBody displayRowCheckbox={false}>
+              {trades}
+            </TableBody>
+          </Table>
+        </CardText>
+      </Card>
+    );
+  }
+
+  renderLoansCard() {
+    const stateNames = ['ACTIVE', 'INACTIVE'];
+
+    const loans = this.props.loans
+      ? this.props.loans.map(
+          (a, i) => (
+              <TableRow key={i}>
+                <TableRowColumn>{a.lender}</TableRowColumn>
+                <TableRowColumn>{a.borrower}</TableRowColumn>
+                <TableRowColumn>{a.security}</TableRowColumn>
+                <TableRowColumn>{a.units.toNumber()}</TableRowColumn>
+                <TableRowColumn>
+                  <Timestamp time={a.ts_start}/>
+                </TableRowColumn>
+                <TableRowColumn>
+                  <Timestamp time={a.ts_end}/>
+                </TableRowColumn>
+                <TableRowColumn>{a.margin.toNumber()/100.0}%</TableRowColumn>
+                <TableRowColumn>£{a.interest_paid.toNumber()}</TableRowColumn>
+                <TableRowColumn>
+                  {stateNames[a.state.toNumber()]}
+                </TableRowColumn>
+              </TableRow>
+          )
+        )
+        : null;
+
+    return (
+      <Card>
+        <CardTitle title="Loans">
+          {this.renderProgress()}
+        </CardTitle>
+        <CardText>
+          <Table
+            selectable={false}
+            fixedHeader={false}
+            style={{'table-layout': 'auto'}}>
+            <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+              <TableRow>
+                <TableHeaderColumn>Lender</TableHeaderColumn>
+                <TableHeaderColumn>Borrower</TableHeaderColumn>
+                <TableHeaderColumn>Security</TableHeaderColumn>
+                <TableHeaderColumn>Units</TableHeaderColumn>
+                <TableHeaderColumn>Start time</TableHeaderColumn>
+                <TableHeaderColumn>End time</TableHeaderColumn>
+                <TableHeaderColumn>Margin</TableHeaderColumn>
+                <TableHeaderColumn>Interest paid</TableHeaderColumn>
+                <TableHeaderColumn>State</TableHeaderColumn>
+              </TableRow>
+            </TableHeader>
+            <TableBody displayRowCheckbox={false}>
+              {loans}
             </TableBody>
           </Table>
         </CardText>
