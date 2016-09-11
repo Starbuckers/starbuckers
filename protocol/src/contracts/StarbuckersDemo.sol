@@ -86,13 +86,14 @@ contract Starbuckers { //is BlockOneOracleClient(){
     // agreements //////////////////////////////////////////////////////////////
     //
 
-    function getAgreement(uint _lendingId) constant returns (address from, address to, string securitycode, uint16 haircut, uint16 lendigrate) {
+    function getAgreement(uint _lendingId) constant returns (address from, address to, string securitycode, uint16 haircut, uint16 lendigrate, State state) {
         var a = agreements[_lendingId];
         from = a.from;
         to = a.to;
         securitycode = a.securitycode;
         haircut = a.haircut;
         lendigrate = a.lendingrate;
+        state = a.state;
     }
     
     function getAgreementArraySize() constant returns(uint256 size){
