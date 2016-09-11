@@ -2,8 +2,27 @@
 import "strings.sol";
 //import "BlockOneOracleClient.sol";
 
+contract EntitlementRegistry{function get(string _name)constant returns(address );function getOrThrow(string _name)constant returns(address );}
+contract Entitlement{function isEntitled(address _address)constant returns(bool );}
+
+    
 contract Starbuckers { //is BlockOneOracleClient(){
     using strings for *;
+    
+    // BlockOne ID bindings
+
+  // The address below is for the Edgware network only
+  EntitlementRegistry entitlementRegistry = EntitlementRegistry(0xe5483c010d0f50ac93a341ef5428244c84043b54);
+
+  function getEntitlement() constant returns(address) {
+      return 0x0; //; entitlementRegistry.getOrThrow("tr.star.buck");
+  }
+
+  modifier entitledUsersOnly {
+    if (!Entitlement(getEntitlement()).isEntitled(msg.sender)) throw;
+    _;
+  }
+
 
     // enum
     
@@ -69,9 +88,9 @@ contract Starbuckers { //is BlockOneOracleClient(){
     
     mapping (address => Account) accounts;
     Agreement[] public agreements;
-    Order[] orders;
-    Trade[] trades;
-    Loan[] loans;
+    Order[] public orders;
+    Trade[] public trades;
+    Loan[] public loans;
     
     
     //
@@ -166,7 +185,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
             if (!bcode.equals(scode)) continue;
             if (oNew.units != o.units) continue;
             if (oNew.unitprice != o.unitprice) continue;
-            // we match
+            if (oNew.buysell == o.buysell) continue;
             iMatched = int(i);
             break;
         }
@@ -176,7 +195,7 @@ contract Starbuckers { //is BlockOneOracleClient(){
             o.state = OrderState.MATCHED;
             createTrade(j);
         }
-        orders.push(o);
+        orders.push(oNew);
         
     }  
     
@@ -186,6 +205,9 @@ contract Starbuckers { //is BlockOneOracleClient(){
     //
     // trades //////////////////////////////////////////////////////////////////
     //
+    function getTradesArraySize() constant returns (uint){
+        return trades.length;
+    }
     
     function getTrade(uint index) constant returns (address buyer, address seller, string securitycode, uint16 units, uint32 unitprice, TradeState state){
         
@@ -278,6 +300,9 @@ contract Starbuckers { //is BlockOneOracleClient(){
     //
     // loans ///////////////////////////////////////////////////////////////////
     //
+    function getLoansArraySize() constant returns (uint){
+        return trades.length;
+    }
 
     function checkAvailableSecurities(address seller) constant returns (uint256 available){
         available=0;
@@ -362,13 +387,12 @@ contract StarbuckersDemo is Starbuckers{
     
     function StarbuckersDemo(){
         log0("init");
-        address newGuy = 0xca35b7d915458ef540ade6068dfe2f44e8fa733c;
-        address newGuy2 = 0x14723a09acff6d2a60dcdf7aa4aff308fddc160c;
+         newGuy = 0xca35b7d915458ef540ade6068dfe2f44e8fa733c;
+         newGuy2 = 0x14723a09acff6d2a60dcdf7aa4aff308fddc160c;
 
         address owner = msg.sender;
         accounts[owner] = Account(3000, 500, 0);
-
-        init(newGuy, newGuy2);
+        demo();
     }
     
     function demo(){init(newGuy, newGuy2);}
@@ -379,8 +403,8 @@ contract StarbuckersDemo is Starbuckers{
         accounts[newGuy] = Account(1000, 100, 0);
         accounts[newGuy2] = Account(5000, 500, 0);
         proposeLendingAgreement(newGuy2, "BARC.L", 100, 200);
-        processOrder(newGuy, newGuy2, BuySell.BUY, "BARC.L", 10, 20);
-        processOrder(newGuy2, newGuy, BuySell.SELL, "BARC.L", 10, 20);
+        processOrder(newGuy, newGuy2, BuySell.BUY, "BARC.L", 10, 17450);
+        processOrder(newGuy2, newGuy, BuySell.SELL, "BARC.L", 10, 17450);
     
         log0("trade created");
         //processTrade(0);
